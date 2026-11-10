@@ -1,14 +1,14 @@
-"""Hold-temperature statistics and SPC chart for a PCR run.
+"""Hold-temperature statistics for a PCR run, and the check against a reference thermocouple.
 
-    python thermal_spc.py run01_control.csv [--ref run01_ref.csv] [--plot run01_imr.png]
+    python thermal_spc.py run01_control.csv [--ref run01_ref.csv]
 
 control log (from firmware): ms,setpoint_c,block_c,effort,heater_duty,fan_duty,phase,cycle
 reference log (thermocouple): ms,ref_c
 phase: 1 initial, 2 denature, 3 anneal, 4 extend, 5 final
 
 Per step: overshoot, settling time into +/-0.5 C, hold mean and SD.
-Across cycles: I-MR control limits on the anneal hold means (mean +/- 2.66 * MRbar).
-With --ref: board-minus-thermocouple offset at each setpoint.
+With --ref: board-minus-thermocouple offset at each setpoint, and whether the
+95 / 60 / 72 C holds are within +/-1 C of the thermocouple.
 """
 import argparse
 import csv
@@ -52,13 +52,6 @@ def step_stats(step, start_temp):
     }
 
 
-def imr(values):
-    mr = mean(abs(b - a) for a, b in zip(values, values[1:]))
-    c = mean(values)
-    ucl, lcl = c + 2.66 * mr, c - 2.66 * mr
-    return c, ucl, lcl, [i + 1 for i, v in enumerate(values) if v > ucl or v < lcl]
-
-
 def ref_offsets(samples, ref):
     out = {}
     j = 0
@@ -77,7 +70,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("control")
     ap.add_argument("--ref")
-    ap.add_argument("--plot")
     a = ap.parse_args()
 
     samples = load(a.control)
@@ -96,28 +88,12 @@ def main():
               f"max settle={max(settled) if settled else float('nan'):.1f} s  "
               f"worst hold SD={max(sds) if sds else float('nan'):.3f} C  never settled={len(rs) - len(settled)}")
 
-    anneal = [r["mean"] for r in results if r["phase"] == "anneal" and r["mean"] is not None]
-    if len(anneal) > 1:
-        c, ucl, lcl, ooc = imr(anneal)
-        print(f"anneal I-MR: center {c:.3f}  UCL {ucl:.3f}  LCL {lcl:.3f}  out of control: {ooc or 'none'}")
-        if a.plot:
-            import matplotlib
-            matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(figsize=(8, 3.5))
-            ax.plot(range(1, len(anneal) + 1), anneal, marker="o", lw=1)
-            for y, ls in ((c, "-"), (ucl, "--"), (lcl, "--")):
-                ax.axhline(y, ls=ls, color="gray", lw=1)
-            ax.set_xlabel("cycle")
-            ax.set_ylabel("anneal hold mean (C)")
-            fig.tight_layout()
-            fig.savefig(a.plot, dpi=150)
-
     if a.ref:
         with open(a.ref) as fh:
             ref = [(float(r["ms"]) / 1000, float(r["ref_c"])) for r in csv.DictReader(fh)]
         for sp, off in sorted(ref_offsets(samples, ref).items()):
-            print(f"{sp:.0f} C: board - thermocouple = {off:+.2f} C")
+            verdict = "within +/-1 C" if abs(off) <= 1.0 else "OUTSIDE +/-1 C"
+            print(f"{sp:.0f} C: board - thermocouple = {off:+.2f} C  ({verdict})")
 
 
 if __name__ == "__main__":

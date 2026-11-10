@@ -16,7 +16,7 @@
 * 5 V USB-C rail
 VBUS vbus 0 DC 5
 
-* Heater trace (measure your own; 2.5 ohm used in hardware/calculations.md)
+* Heater trace (measure your own; 2.5 ohm used in hardware/heater_driver_notes.md)
 RHEAT vbus drain 2.5
 
 * MCU GPIO: 3.3 V PWM at ~732 Hz, 50 % duty, ~25 ohm output resistance

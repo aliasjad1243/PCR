@@ -90,7 +90,8 @@ def main():
 
     if a.ref:
         with open(a.ref) as fh:
-            ref = [(float(r["ms"]) / 1000, float(r["ref_c"])) for r in csv.DictReader(fh)]
+            ref = [(float(r["ms"]) / 1000, float(r["ref_c"]))
+                   for r in csv.DictReader(l for l in fh if not l.startswith("#"))]
         for sp, off in sorted(ref_offsets(samples, ref).items()):
             verdict = "within +/-1 C" if abs(off) <= 1.0 else "OUTSIDE +/-1 C"
             print(f"{sp:.0f} C: board - thermocouple = {off:+.2f} C  ({verdict})")

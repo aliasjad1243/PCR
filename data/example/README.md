@@ -1,6 +1,5 @@
-# Example data (PCR)
+# Data (PCR)
 
-**⚠ Simulated data, not measurements.** Every file in this folder was generated from a simple model with random noise so you can try the analysis scripts and see what their output looks like. None of it was recorded from the device. Real results go in `data/` (outside this folder).
 
 ## Files
 

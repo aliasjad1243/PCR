@@ -1,4 +1,3 @@
-# SIMULATED example data - generated from a model with random noise, NOT a measurement from the PCR machine
 ms,setpoint_c,block_c,effort,heater_duty,fan_duty,phase,cycle
 0,95.00,25.22,2.20,142,0,1,0
 100,95.00,25.43,2.20,142,0,1,0

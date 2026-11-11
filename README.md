@@ -69,8 +69,6 @@ python analysis/thermal_spc.py run01_control.csv --ref run01_ref.csv
 Pin numbers, PID starting gains and the heater model coefficients come from the PocketPCR
 V1.02 firmware and are marked where they're used.
 
-## Try it with example data
-
 `data/example/` has **simulated** files (generated, not measured) so the scripts can be run without the hardware; see [`data/example/README.md`](data/example/README.md).
 
 ## License
